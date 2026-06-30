@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学年早見表</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, 'Hiragino Sans', 'YuGothic', 'Meiryo', sans-serif;
+            background: #f2f2f7;
+            color: #1c1c1e;
+            min-height: 100vh;
+            padding: 24px 16px;
+        }
+
+        .wrap { max-width: 740px; margin: 0 auto; }
+
+        header { margin-bottom: 24px; }
+        h1 { font-size: 24px; font-weight: 700; }
+        .sub { font-size: 13px; color: #8e8e93; margin-top: 4px; }
+
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 6px 20px rgba(0,0,0,.04);
+            margin-bottom: 16px;
+        }
+
+        .input-row {
+            display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+        }
+        .input-row label { font-size: 15px; font-weight: 600; white-space: nowrap; }
+        input[type="date"] {
+            flex: 1; min-width: 160px;
+            padding: 9px 13px;
+            border: 1.5px solid #d1d1d6;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color .15s;
+        }
+        input[type="date"]:focus { border-color: #007aff; }
+        .btn {
+            padding: 9px 22px;
+            background: #007aff;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn:hover { background: #0066d6; }
+        .btn:active { background: #0055b3; }
+
+        /* Summary strip */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        @media (max-width: 460px) { .summary-grid { grid-template-columns: 1fr 1fr; } }
+        .summary-item { text-align: center; }
+        .summary-label { font-size: 10px; color: #8e8e93; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
+        .summary-value { font-size: 15px; font-weight: 700; margin-top: 3px; color: #1c1c1e; }
+
+        /* Alert */
+        .alert {
+            background: #fffbe6;
+            border: 1px solid #ffe066;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+        .alert strong { color: #7a5c00; }
+
+        /* Table */
+        .table-scroll { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        thead th {
+            background: #f2f2f7;
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            color: #8e8e93;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e5e5ea;
+        }
+        tbody td {
+            padding: 9px 12px;
+            border-bottom: 1px solid #f2f2f7;
+            vertical-align: middle;
+        }
+        tbody tr:last-child td { border-bottom: none; }
+
+        /* Section dividers */
+        tr.divider-row td {
+            background: #f9f9fb;
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #aeaeb2;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e5e5ea;
+        }
+
+        /* Current nendo highlight */
+        tr.current td { background: #fffbe6; }
+        tr.current td:first-child {
+            border-left: 3px solid #f0a500;
+            padding-left: 9px;
+        }
+
+        .nendo-num { font-weight: 700; font-size: 14px; display: inline; }
+        .era-str { font-size: 11px; color: #aeaeb2; display: block; margin-top: 1px; }
+
+        .tag {
+            display: inline-block;
+            font-size: 10px; font-weight: 700;
+            border-radius: 4px;
+            padding: 1px 5px;
+            margin-top: 2px;
+        }
+        .tag-current { background: #fff0b3; color: #a07800; }
+        .tag-born    { background: #ddf0ff; color: #0077cc; }
+
+        /* Grade badges */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .b-birth   { background: #f2f2f7; color: #8e8e93; }
+        .b-nursery { background: #fce4ec; color: #b71c5f; }
+        .b-kinder  { background: #ede7f6; color: #512da8; }
+        .b-elem    { background: #e3f2fd; color: #1455a8; }
+        .b-middle  { background: #e8f5e9; color: #256d29; }
+        .b-high    { background: #fff3e0; color: #b83200; }
+
+        .note { font-size: 11px; color: #8e8e93; margin-top: 3px; }
+        .age-neg { color: #c0392b; font-size: 13px; }
+        .cat-text { font-size: 13px; color: #3a3a3c; }
+
+        #result { display: none; }
+
+        /* Law citation */
+        .law-card {
+            border-left: 3px solid #aeaeb2;
+            padding: 10px 14px;
+            margin-top: 8px;
+        }
+        .law-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #8e8e93;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .law-body {
+            font-size: 13px;
+            line-height: 1.8;
+            color: #3a3a3c;
+        }
+        .law-body mark {
+            background: #fff3b0;
+            color: inherit;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+
+        /* Dictionary citation */
+        .dict-card {
+            border-left: 3px solid #aeaeb2;
+            padding: 10px 14px;
+            margin-top: 8px;
+        }
+        .dict-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #8e8e93;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .dict-headword {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1c1c1e;
+            margin-bottom: 4px;
+        }
+        .dict-body {
+            font-size: 13px;
+            line-height: 1.8;
+            color: #3a3a3c;
+        }
+        .dict-body mark {
+            background: #fff3b0;
+            color: inherit;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <header>
+        <h1>学年早見表</h1>
+        <p class="sub">生年月日を入力すると、誕生から高校3年まで学年対応表を自動生成します</p>
+    </header>
+
+    <div class="card">
+        <div class="input-row">
+            <label for="bd">生年月日</label>
+            <input type="date" id="bd" />
+            <button class="btn" onclick="gen()">生成</button>
+        </div>
+    </div>
+
+    <div id="result">
+
+        <div class="card">
+            <div class="summary-grid" id="summary"></div>
+        </div>
+
+        <div id="alert-box" class="alert" style="display:none"></div>
+
+        <div class="card">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>年度</th>
+                            <th>学年・クラス</th>
+                            <th>区分</th>
+                            <th>4/1時点年齢</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="law-card">
+        <div class="law-title">学校教育法 第17条</div>
+        <p class="law-body"><span style="font-weight:600;color:#8e8e93;margin-right:6px">①</span>保護者は、子の<mark>満六歳に達した日の翌日以後における最初の学年の初め</mark>から、満十二歳に達した日の属する学年の終わりまで、これを小学校、義務教育学校の前期課程又は特別支援学校の小学部に就学させる義務を負う。</p>
+        <p class="law-body" style="margin-top:10px"><span style="font-weight:600;color:#8e8e93;margin-right:6px">②</span>保護者は、子が<mark>小学校の課程、義務教育学校の前期課程又は特別支援学校の小学部の課程を修了した日の翌日以後における最初の学年の初め</mark>から、満十五歳に達した日の属する学年の終わりまで、これを中学校、義務教育学校の後期課程、中等教育学校の前期課程又は特別支援学校の中学部に就学させる義務を負う。</p>
+    </div>
+
+    <div class="law-card">
+        <div class="law-title">学校教育法 第26条</div>
+        <p class="law-body">幼稚園に入園することのできる者は、<mark>満三歳から、小学校就学の始期に達するまでの幼児</mark>とする。</p>
+    </div>
+
+    <div class="law-card">
+        <div class="law-title">幼保連携型認定こども園の学級の編制、職員、設備及び運営に関する基準 第4条</div>
+        <p class="law-body"><span style="font-weight:600;color:#8e8e93;margin-right:6px">①</span>満三歳以上の園児については、教育課程に基づく教育を行うため、学級を編制するものとする。</p>
+        <p class="law-body" style="margin-top:10px"><span style="font-weight:600;color:#8e8e93;margin-right:6px">②</span>一学級の園児数は、三十人以下を原則とする。</p>
+        <p class="law-body" style="margin-top:10px"><span style="font-weight:600;color:#8e8e93;margin-right:6px">③</span>学級は、<mark>学年の初めの日の前日において同じ年齢にある園児</mark>で編制することを原則とする。</p>
+    </div>
+
+    <div class="law-card">
+        <div class="law-title">労働基準法 第65条第2項　― 認可保育園「生後57日」受け入れの根拠</div>
+        <p class="law-body">使用者は、<mark>産後八週間を経過しない女性を就業させてはならない</mark>。ただし、産後六週間を経過した女性が請求した場合において、その者について医師が支障がないと認めた業務に就かせることは、差し支えない。</p>
+        <p class="law-body" style="margin-top:10px;color:#8e8e93;font-size:12px">産後8週間＝56日。母親が最短で職場復帰できるのは産後57日目以降であるため、認可保育園の最低受け入れ月齢は「生後57日」と定められている。</p>
+    </div>
+
+    <div class="dict-card">
+        <div class="dict-title">デジタル大辞泉</div>
+        <div class="dict-headword">しんせい‐じ【新生児】</div>
+        <p class="dict-body">生まれたばかりの赤ん坊。医学では<mark>生後4週間まで</mark>をいう。新産児。初生児。</p>
+    </div>
+
+</div>
+
+<script>
+/* ---- 元号変換 ---- */
+function era(y) {
+    if (y >= 2019) return '令和' + (y === 2019 ? '元' : y - 2018) + '年度';
+    if (y >= 1989) return '平成' + (y === 1989 ? '元' : y - 1988) + '年度';
+    if (y >= 1926) return '昭和' + (y === 1926 ? '元' : y - 1925) + '年度';
+    if (y >= 1912) return '大正' + (y === 1912 ? '元' : y - 1911) + '年度';
+    return y + '年度';
+}
+
+/* ---- メイン生成処理 ---- */
+function gen() {
+    const v = document.getElementById('bd').value;
+    if (!v) { alert('生年月日を入力してください'); return; }
+
+    // ブラウザのタイムゾーン影響を避けるためローカル日付で解析
+    const [bY, bM, bD] = v.split('-').map(Number);
+
+    /*
+     * 4月2日以降生まれかどうか
+     * 日本の学年：4月1日時点の満年齢で決まる
+     * → 同学年は「前年4月2日〜当年4月1日」生まれ
+     */
+    const afterApr1 = bM > 4 || (bM === 4 && bD > 1);
+
+    /*
+     * 小学1年生になる年度（小1入学年度）
+     * 4月1日以前生まれ：満6歳を迎えた年の4月
+     * 4月2日以降生まれ：満6歳は翌年4月以降のため1年後ろ
+     */
+    const ssY = afterApr1 ? bY + 7 : bY + 6;
+
+    /*
+     * 誕生年度（4月始まり）
+     * 4〜12月生まれ → 誕生年がそのまま年度
+     * 1〜3月生まれ  → 前の年度（例：2026年1月 → 2025年度）
+     */
+    const birthNendo = bM >= 4 ? bY : bY - 1;
+    const endNendo   = ssY + 11;  // 高3修了年度
+
+    // 現在の年度
+    const now   = new Date();
+    const nowM  = now.getMonth() + 1;
+    const nowY  = now.getFullYear();
+    const curNd = nowM >= 4 ? nowY : nowY - 1;
+
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = '';
+
+    let prevSection = null;
+
+    for (let n = birthNendo; n <= endNendo; n++) {
+        const gi = n - ssY;  // grade index: -7=誕生年度, -6=0歳, 0=小1, 6=中1, 9=高1
+
+        /* 4/1時点での年齢
+         * 4月1日以前生まれ：誕生日はすでに来ている → nendo - bY
+         * 4月2日以降生まれ：誕生日はまだ → nendo - bY - 1          */
+        const age = afterApr1 ? n - bY - 1 : n - bY;
+
+        let label, bClass, cat, note = '', kinderLabel = '';
+
+        if (gi === -7) {
+            label = '誕生年度（学年外）'; bClass = 'b-birth'; cat = '—';
+            note  = '4/1時点では未誕生の年度';
+        } else if (gi === -6) {
+            label = '0歳児クラス'; bClass = 'b-nursery'; cat = '保育園';
+        } else if (gi === -5) {
+            label = '1歳児クラス'; bClass = 'b-nursery'; cat = '保育園';
+        } else if (gi === -4) {
+            label = '2歳児クラス'; bClass = 'b-nursery'; cat = '保育園';
+        } else if (gi === -3) {
+            label = '3歳児クラス'; bClass = 'b-nursery'; cat = '保育園・幼稚園';
+            kinderLabel = '年少';
+        } else if (gi === -2) {
+            label = '4歳児クラス'; bClass = 'b-nursery'; cat = '保育園・幼稚園';
+            kinderLabel = '年中';
+        } else if (gi === -1) {
+            label = '5歳児クラス'; bClass = 'b-nursery'; cat = '保育園・幼稚園';
+            kinderLabel = '年長';
+        } else if (gi >= 0 && gi <= 5) {
+            label = '小学' + (gi + 1) + '年生'; bClass = 'b-elem'; cat = '小学校';
+        } else if (gi >= 6 && gi <= 8) {
+            label = '中学' + (gi - 5) + '年生'; bClass = 'b-middle'; cat = '中学校';
+        } else if (gi >= 9 && gi <= 11) {
+            label = '高校' + (gi - 8) + '年生'; bClass = 'b-high'; cat = '高校';
+        }
+
+        // セクション仕切りを挿入
+        const section = gi < -6 ? 'before' : gi < 0 ? 'preschool' : gi < 6 ? 'elem' : gi < 9 ? 'middle' : 'high';
+        const sectionLabel = { before: '誕生年度', preschool: '保育園・幼稚園', elem: '小学校', middle: '中学校', high: '高校' };
+        if (section !== prevSection) {
+            const divTr = document.createElement('tr');
+            divTr.classList.add('divider-row');
+            divTr.innerHTML = `<td colspan="4">${sectionLabel[section]}</td>`;
+            tbody.appendChild(divTr);
+            prevSection = section;
+        }
+
+        // 誕生タグ：この年度中に実際に生まれるか
+        const bornInNendo = (bM >= 4 && bY === n) || (bM < 4 && bY === n + 1);
+
+        const tr = document.createElement('tr');
+        if (n === curNd) tr.classList.add('current');
+
+        const ageHtml = age < 0
+            ? `<span class="age-neg">${age}歳（未誕生）</span>`
+            : age + ' 歳';
+
+        const curTag   = n === curNd ? `<span class="tag tag-current">現在</span>` : '';
+        const bornTag  = bornInNendo ? `<span class="tag tag-born">誕生 ${bM}/${bD}</span>` : '';
+
+        tr.innerHTML = `
+            <td>
+                <span class="nendo-num">${n}年度</span>${curTag}
+                <span class="era-str">${era(n)}</span>
+                ${bornTag ? `<div style="margin-top:2px">${bornTag}</div>` : ''}
+            </td>
+            <td>
+                <span class="badge ${bClass}">${label}</span>
+                ${kinderLabel ? `<span class="badge b-kinder" style="margin-left:6px">${kinderLabel}</span>` : ''}
+                ${note ? `<div class="note">${note}</div>` : ''}
+            </td>
+            <td class="cat-text">${cat}</td>
+            <td>${ageHtml}</td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    // サマリー
+    document.getElementById('summary').innerHTML = `
+        <div class="summary-item">
+            <div class="summary-label">誕生日</div>
+            <div class="summary-value" style="font-size:14px">${bY}年${bM}月${bD}日</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-label">小学校入学</div>
+            <div class="summary-value">${ssY}年4月</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-label">高校卒業</div>
+            <div class="summary-value">${ssY + 11}年3月</div>
+        </div>
+    `;
+
+    // -1歳 説明バナー（4/2以降生まれのみ）
+    const ab = document.getElementById('alert-box');
+    if (afterApr1) {
+        ab.style.display = 'block';
+        ab.innerHTML = `
+            <strong>「-1歳」行について</strong><br>
+            ${bM}月${bD}日生まれのお子さんは「4月2日以降生まれ」のため、
+            誕生した年度の4月1日時点ではまだ誕生していない状態になります。<br>
+            日本の学年は <strong>4月1日時点の満年齢</strong> で決まる（4月2日〜翌4月1日生まれが同学年）ため、
+            表の先頭行「誕生年度（学年外）」はシステム上この現象を示す行です。
+            実際にはその年度の <strong>${bM}月${bD}日</strong> に誕生し、翌年度から0歳児クラスに対応します。
+        `;
+    } else {
+        ab.style.display = 'none';
+    }
+
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.getElementById('bd').addEventListener('keydown', e => {
+    if (e.key === 'Enter') gen();
+});
+
+// 初期表示：今日の日付で表を生成
+(function () {
+    const t = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('bd').value = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+    gen();
+})();
+</script>
+</body>
+</html>
