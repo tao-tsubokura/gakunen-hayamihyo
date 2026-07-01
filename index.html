@@ -356,7 +356,7 @@ function gen() {
          * 4月2日以降生まれ：誕生日はまだ → nendo - bY - 1          */
         const age = afterApr1 ? n - bY - 1 : n - bY;
 
-        let label, bClass, cat, note = '', kinderLabel = '', earlyTag = '', contTag = '';
+        let label, bClass, cat, note = '', kinderLabel = '', kinderLabel2 = '', earlyTag = '', contTag = '';
 
         if (gi === -7) {
             label = '誕生年度（学年外）'; bClass = 'b-birth'; cat = '—';
@@ -369,7 +369,7 @@ function gen() {
             label = '1歳児クラス'; bClass = 'b-nursery'; cat = '保育園';
         } else if (gi === -4) {
             label = '2歳児クラス'; bClass = 'b-nursery'; cat = '保育園・幼稚園';
-            kinderLabel = '満3歳児クラス（年少々）';
+            kinderLabel = '年少々'; kinderLabel2 = '満3歳児クラス';
             earlyTag = '幼稚園のみ：満3歳〜「年少を2回経験」または「満3歳児クラス」として入園可';
         } else if (gi === -3) {
             label = '3歳児クラス'; bClass = 'b-nursery'; cat = '保育園・幼稚園';
@@ -422,6 +422,7 @@ function gen() {
             <td>
                 <span class="badge ${bClass}">${label}</span>
                 ${kinderLabel ? `<span class="badge b-kinder" style="margin-left:6px">${kinderLabel}</span>` : ''}
+                ${kinderLabel2 ? `<span class="badge b-kinder" style="margin-left:6px">${kinderLabel2}</span>` : ''}
                 ${note ? `<div class="note">${note}</div>` : ''}
                 ${earlyTag ? `<div class="note"><span class="tag tag-early">早期入園可</span> ${earlyTag}</div>` : ''}
                 ${contTag  ? `<div class="note"><span class="tag tag-cont">継続在籍</span> ${contTag}</div>` : ''}
