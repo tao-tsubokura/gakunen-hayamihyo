@@ -134,6 +134,8 @@
         }
         .tag-current { background: #fff0b3; color: #a07800; }
         .tag-born    { background: #ddf0ff; color: #0077cc; }
+        .tag-early   { background: #fff0e0; color: #b05800; }
+        .tag-cont    { background: #e0f5f0; color: #00695c; }
 
         /* Grade badges */
         .badge {
@@ -349,20 +351,24 @@ function gen() {
          * 4月2日以降生まれ：誕生日はまだ → nendo - bY - 1          */
         const age = afterApr1 ? n - bY - 1 : n - bY;
 
-        let label, bClass, cat, note = '', kinderLabel = '';
+        let label, bClass, cat, note = '', kinderLabel = '', earlyTag = '', contTag = '';
 
         if (gi === -7) {
             label = '誕生年度（学年外）'; bClass = 'b-birth'; cat = '—';
             note  = '4/1時点では未誕生の年度';
+            earlyTag = '生後57日〜0歳児クラスへ入園可';
         } else if (gi === -6) {
             label = '0歳児クラス'; bClass = 'b-nursery'; cat = '保育園';
+            contTag = '前年度から入園の場合、継続在籍';
         } else if (gi === -5) {
             label = '1歳児クラス'; bClass = 'b-nursery'; cat = '保育園';
         } else if (gi === -4) {
             label = '2歳児クラス'; bClass = 'b-nursery'; cat = '保育園';
+            earlyTag = '満3歳〜幼稚園 年少クラスへ入園可';
         } else if (gi === -3) {
             label = '3歳児クラス'; bClass = 'b-nursery'; cat = '保育園・幼稚園';
             kinderLabel = '年少';
+            contTag = '前年度から入園の場合、年少として継続在籍';
         } else if (gi === -2) {
             label = '4歳児クラス'; bClass = 'b-nursery'; cat = '保育園・幼稚園';
             kinderLabel = '年中';
@@ -411,6 +417,8 @@ function gen() {
                 <span class="badge ${bClass}">${label}</span>
                 ${kinderLabel ? `<span class="badge b-kinder" style="margin-left:6px">${kinderLabel}</span>` : ''}
                 ${note ? `<div class="note">${note}</div>` : ''}
+                ${earlyTag ? `<div class="note"><span class="tag tag-early">早期入園可</span> ${earlyTag}</div>` : ''}
+                ${contTag  ? `<div class="note"><span class="tag tag-cont">継続在籍</span> ${contTag}</div>` : ''}
             </td>
             <td class="cat-text">${cat}</td>
             <td>${ageHtml}</td>
