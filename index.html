@@ -356,19 +356,19 @@ function gen() {
         if (gi === -7) {
             label = '誕生年度（学年外）'; bClass = 'b-birth'; cat = '—';
             note  = '4/1時点では未誕生の年度';
-            earlyTag = '生後57日〜0歳児クラスへ入園可';
+            earlyTag = '保育園：生後57日〜0歳児クラスへ入園可';
         } else if (gi === -6) {
             label = '0歳児クラス'; bClass = 'b-nursery'; cat = '保育園';
-            contTag = '前年度から入園の場合、継続在籍';
+            contTag = '保育園：前年度から入園の場合、継続在籍';
         } else if (gi === -5) {
             label = '1歳児クラス'; bClass = 'b-nursery'; cat = '保育園';
         } else if (gi === -4) {
             label = '2歳児クラス'; bClass = 'b-nursery'; cat = '保育園';
-            earlyTag = '満3歳〜幼稚園 年少クラスへ入園可';
+            earlyTag = '幼稚園のみ：満3歳〜年少クラスへ入園可';
         } else if (gi === -3) {
             label = '3歳児クラス'; bClass = 'b-nursery'; cat = '保育園・幼稚園';
             kinderLabel = '年少';
-            contTag = '前年度から入園の場合、年少として継続在籍';
+            contTag = '幼稚園のみ：前年度から入園の場合、年少として継続在籍';
         } else if (gi === -2) {
             label = '4歳児クラス'; bClass = 'b-nursery'; cat = '保育園・幼稚園';
             kinderLabel = '年中';
